@@ -77,8 +77,7 @@ const listWordBanned = new RegExp(config.palabras.join("|"), 'gi');
 const validarMensaje = (message) => {
     const nameLength = message.name.length < 51;
     const contentLength = message.content.length < 256
-    const wordBanned = listWordBanned.test(message.content);
-
-    return nameLength && contentLength && !wordBanned
+    const wordBanned = !message.content.match(listWordBanned);   
+    return nameLength && contentLength && wordBanned
 }
 
