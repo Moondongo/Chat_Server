@@ -12,7 +12,8 @@ try{
 const httpServer = createServer();
 const io = new Server(httpServer, {
     cors: {
-        origin: "*" // "*" all
+        origin: ["http://127.0.0.1:5500", "https://moondongo.github.io"],
+        credentials: true
     }
 });
 
