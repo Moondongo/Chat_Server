@@ -2,7 +2,7 @@ const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const socketIO = require('socket.io');
-const http = require('http');
+const https = require('https');
 
 let config;
 try {
@@ -19,9 +19,13 @@ try{
 }
 
 //INICIALIZACION
+const SSL = {
+    cert: fs.readFileSync('./certificado/server.cer'),
+    key: fs.readFileSync('./certificado/server.key')
+};
 const PORT = process.env.PORT || 3000;
 const app = express();
-const server = http.createServer(app);
+const server = https.createServer(SSL, app);
 const io = socketIO(server, {
     cors: {
         origin: config.dominios,

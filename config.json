@@ -1,4 +1,4 @@
 {
-    "dominios" : ["http://127.0.0.1:5500", "https://moondongo.github.io"],
+    "dominios" : ["http://127.0.0.1:5500", "https://moondongo.github.io", "https://cdpn.io"],
     "palabras" : []
 }
