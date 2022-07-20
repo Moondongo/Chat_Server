@@ -1,6 +1,5 @@
 const fs = require('fs');
 const express = require('express');
-const cors = require('cors');
 const socketIO = require('socket.io');
 const https = require('https');
 
@@ -8,7 +7,8 @@ let config;
 try {
     config = JSON.parse(fs.readFileSync('config.json'));
 } catch (error) {
-    config = []
+    config["dominios"] = [];
+    config["palabras"] = [];
 }
 
 let rooms;
@@ -36,14 +36,6 @@ const io = socketIO(server, {
 //settings
 app.set('port', process.env.PORT || 3000);
 
-// const httpServer = createServer();
-// const io = new Server(httpServer, {
-//     cors: {
-//         origin: ["http://127.0.0.1:5500", "https://moondongo.github.io"],
-//         credentials: true
-//     }
-// });
-
 
 io.on("connection", (socket) => {
     const room = socket.handshake.headers.origin //obtengo el dominio del cliente
@@ -54,15 +46,21 @@ io.on("connection", (socket) => {
 
     socket.on("nuevo_mensaje", (message) => {
         message['date'] = Date.now();
-        io.to(room).emit("difundir_mensaje", message);
+        
+        if(validarMensaje(message)){
+            io.to(room).emit("difundir_mensaje", message);
+            if(rooms[room].length > 50) rooms[room].shift(); //limito el historial de mensaje de cada sala
+            rooms[room].push(message)
 
-        if(rooms[room].length > 50) rooms[room].shift(); //limito el historial de mensaje de cada sala
-        rooms[room].push(message)
-
-        fs.writeFile("database.json", JSON.stringify(rooms, null, 2), (err) => {
-            if (err) throw err;
-            console.log('Data written to file');
-        })
+            fs.writeFile("database.json", JSON.stringify(rooms, null, 2), (err) => {
+                if (err) throw err;
+                console.log('Data written to file');
+            })
+        }else{
+            message.name = 'SISTEMA'
+            message.content = "Usted No Puede Mandar Ese Mensaje";
+            socket.emit("difundir_mensaje", message)
+        }
     });
     
 });
@@ -75,4 +73,12 @@ server.listen(PORT, () => {
 })
 
 
+const listWordBanned = new RegExp(config.palabras.join("|"), 'gi');
+const validarMensaje = (message) => {
+    const nameLength = message.name.length < 51;
+    const contentLength = message.content.length < 256
+    const wordBanned = listWordBanned.test(message.content);
+
+    return nameLength && contentLength && !wordBanned
+}
 
