@@ -1,6 +1,15 @@
-import fs from 'fs';
-import { createServer } from "http";
-import { Server } from "socket.io";
+const fs = require('fs');
+const express = require('express');
+const cors = require('cors');
+const socketIO = require('socket.io');
+const http = require('http');
+
+let config;
+try {
+    config = JSON.parse(fs.readFileSync('config.json'));
+} catch (error) {
+    config = []
+}
 
 let rooms;
 try{
@@ -9,13 +18,28 @@ try{
     rooms = {}
 }
 
-const httpServer = createServer();
-const io = new Server(httpServer, {
+//INICIALIZACION
+const PORT = process.env.PORT || 3000;
+const app = express();
+const server = http.createServer(app);
+const io = socketIO(server, {
     cors: {
-        origin: ["http://127.0.0.1:5500", "https://moondongo.github.io"],
+        origin: config.dominios,
         credentials: true
     }
 });
+
+//settings
+app.set('port', process.env.PORT || 3000);
+
+// const httpServer = createServer();
+// const io = new Server(httpServer, {
+//     cors: {
+//         origin: ["http://127.0.0.1:5500", "https://moondongo.github.io"],
+//         credentials: true
+//     }
+// });
+
 
 io.on("connection", (socket) => {
     const room = socket.handshake.headers.origin //obtengo el dominio del cliente
@@ -39,9 +63,12 @@ io.on("connection", (socket) => {
     
 });
 
-httpServer.listen(3000, () => {
-    console.log('Server en Marcha')
-});
+app.get('/', (req, res) => {
+    res.send('Servicio en Marcha, mi ray');
+})
+server.listen(PORT, () => {
+    console.log(`Servidor en Marcha en puerto ${PORT}`)
+})
 
 
 
